@@ -1,0 +1,9 @@
+TAP version 13
+1..8
+ok 1 - approved operating system
+# $^0 is solaris
+not ok 2 - bugblatter beast found
+ok 3 - small chance of success    #   skip  ---  fires too hot
+not ok 4 - second breakfast not on time # SKIP
+ok 5 - not implemented # TODO
+not ok 6 - dog wanted to play fetch # todo maybe later

@@ -1,0 +1,16 @@
+TAP version 13
+1..6
+#
+# Create a new Board and Tile, then place
+# the Tile onto the board.
+#
+ok 1 - The object isa Board
+# Got a pretty awesome board there.
+# Hate to see something happen to it.
+ok 2 - Board size is zero
+ok 3 - The object isa Tile
+ok 4 - Get possible places to put the Tile
+ok 5 - Placing the tile produces no error
+ # TODO it should actually produce an error
+ok 6 - Board size is 1
+ # Fail board. LOL.
