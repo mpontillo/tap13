@@ -145,10 +145,10 @@ func Parse(lines []string) *Results {
 				if testNumString != "" {
 					currentTest.TestNumber, err = strconv.Atoi(testNumString)
 					if err != nil {
-						currentTest.TestNumber = 0
+						currentTest.TestNumber = -1
 					}
 				}
-				description := optionalContentMatch[2]
+				description := strings.TrimSpace(optionalContentMatch[2])
 				currentTest.Description = description
 				isFailed := testLineMatch[1] == "not "
 				// Process special cases first; they should not count toward the pass/fail count.
