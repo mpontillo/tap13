@@ -31,9 +31,9 @@ type Results struct {
 }
 
 const (
-	FIND_VERSION_STRING = iota
-	STORE_TEST_METADATA
-	STORE_YAML
+	findVersionString = iota
+	storeTestMetadata
+	storeYaml
 )
 
 func (r *Results) String() string {
@@ -95,7 +95,7 @@ var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
 func Parse(lines []string) *Results {
 	var err error
 	var currentTest *Test
-	state := FIND_VERSION_STRING
+	state := findVersionString
 	foundTestPlan := false
 	foundAllTests := false
 	results := &Results{
@@ -105,7 +105,7 @@ func Parse(lines []string) *Results {
 	}
 	for _, line := range lines {
 		switch state {
-		case FIND_VERSION_STRING:
+		case findVersionString:
 			versionMatch := versionLine.FindStringSubmatch(line)
 			if versionMatch != nil {
 				results.TapVersion, err = strconv.Atoi(versionMatch[1])
@@ -113,9 +113,9 @@ func Parse(lines []string) *Results {
 					// malformed test version line; keep looking
 					continue
 				}
-				state = STORE_TEST_METADATA
+				state = storeTestMetadata
 			}
-		case STORE_TEST_METADATA:
+		case storeTestMetadata:
 			if !foundTestPlan {
 				testPlan := testPlanDeclaration.FindStringSubmatch(line)
 				if testPlan != nil {
@@ -170,7 +170,7 @@ func Parse(lines []string) *Results {
 					foundAllTests = true
 				}
 			} else if strings.TrimSpace(line) == "---" {
-				state = STORE_YAML
+				state = storeYaml
 				continue
 			} else {
 				diagnosticMatch := diagnostic.FindStringSubmatch(line)
@@ -186,9 +186,9 @@ func Parse(lines []string) *Results {
 					}
 				}
 			}
-		case STORE_YAML:
+		case storeYaml:
 			if strings.TrimSpace(line) == "..." {
-				state = STORE_TEST_METADATA
+				state = storeTestMetadata
 				continue
 			}
 		}
