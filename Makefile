@@ -4,3 +4,6 @@ build:
 
 clean:
 	rm -rf bin/
+
+test: build
+	bin/tap13 testdata/*.tap*
