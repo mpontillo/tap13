@@ -1,6 +1,10 @@
 package tap13
 
 import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,16 +39,62 @@ const (
 	STORE_YAML
 )
 
+func (r* Results) String() string {
+	var result string = ""
+	if r.IsPassing() {
+		result += " Overall result: PASS\n"
+	} else {
+		result += " Overall result: FAIL\n"
+	}
+	if r.TotalTests == 0 || r.PassedTests != r.TotalTests {
+		result += fmt.Sprintf("Total tests run: %d\n", r.TotalTests)
+	}
+	if r.ExpectedTests > 0 && r.ExpectedTests != r.TotalTests {
+		result += fmt.Sprintf(" Expected tests: %d\n", r.ExpectedTests)
+	}
+	if r.ExpectedTests > 0 && r.TotalTests < r.ExpectedTests {
+		result += fmt.Sprintf("  Missing tests: %d\n", r.ExpectedTests - r.TotalTests)
+	}
+	if r.PassedTests > 0 {
+		result += fmt.Sprintf("   Passed tests: %d\n", r.PassedTests)
+	}
+	if r.FailedTests > 0 {
+		result += fmt.Sprintf("   Failed tests: %d\n", r.FailedTests)
+	}
+	if r.SkippedTests > 0 {
+		result += fmt.Sprintf("  Skipped tests: %d\n", r.SkippedTests)
+	}
+	if r.TodoTests > 0 {
+		result += fmt.Sprintf("     TODO tests: %d\n", r.TodoTests)
+	}
+	return result
+}
+
+func (r *Results) IsPassing() bool {
+	var testCount int
+	if r.ExpectedTests > 0 {
+		// For a planned run, we must ensure that the number of passing tests is equal to the
+		// number of tests in the plan. Otherwise, at least one test was missing, and the run
+		// should be considered a failure.
+		testCount = r.ExpectedTests
+	} else {
+		// If the test run was "unplanned", the total number of tests is not known, so we must
+		// assume that the total number of tests is equal to the number of tests that were found.
+		testCount = r.TotalTests
+	}
+	return r.TodoTests + r.SkippedTests + r.PassedTests == testCount
+}
+
+var versionLine = regexp.MustCompile(`^TAP version (\d+)`)
+var testLine = regexp.MustCompile(`^(not )?ok\b(.*)`)
+var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*(\w*)\s*.*)?`)
+var testPlanDeclaration = regexp.MustCompile(`^\d+\.\.(\d+)$`)
+var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
 
 func Parse(lines []string) *Results {
 	var err error
 	var currentTest *Test
 	state := FIND_VERSION_STRING
-	versionLine := regexp.MustCompile(`^TAP version (\d+)`)
-	testLine := regexp.MustCompile(`^(not )?ok\b(.*)`)
-	optionalTestLine := regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*(\w*)\s*.*)?`)
-	testPlanDeclaration := regexp.MustCompile(`^\d+\.\.(\d+)$`)
-	diagnostic := regexp.MustCompile(`\s*#(.*)$`)
 	foundTestPlan := false
 	foundAllTests := false
 	results := &Results{
@@ -75,15 +125,15 @@ func Parse(lines []string) *Results {
 			}
 			testLineMatch := testLine.FindStringSubmatch(line)
 			if testLineMatch != nil {
-				// Found a new test. Store the one we were previously working with, and start a new one.
+				// Store the one we were previously working with, and start a new one.
 				if currentTest != nil {
 					results.Tests = append(results.Tests, *currentTest)
 				}
 				currentTest = &Test{}
 				if foundAllTests {
-					// We've already found all the tests in the plan, so don't waste effort looking for more.
-					// The only reason not to break here instead is because we might want to parse any diagnostics
-					// following the test result output.
+					// We've already found all the tests in the plan, so don't waste effort looking
+					// for more. The only reason not to break here instead is because we might want
+					// to parse any diagnostics following the test result output.
 					continue
 				}
 				optionalContentMatch := optionalTestLine.FindStringSubmatch(testLineMatch[2])
@@ -146,4 +196,24 @@ func Parse(lines []string) *Results {
 		results.Tests = append(results.Tests, *currentTest)
 	}
 	return results
+}
+
+func ReadFile(name string) []string {
+	file, err := os.Open(name)
+
+	if err != nil {
+		log.Fatalf("Could not open file: %s", err)
+	}
+
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return lines
 }
