@@ -8,26 +8,26 @@ import (
 )
 
 type Test struct {
-	TestNumber int
-	Passed bool
-	Failed bool
-	Skipped bool
-	Todo bool
+	TestNumber  int
+	Passed      bool
+	Failed      bool
+	Skipped     bool
+	Todo        bool
 	Description string
 	Diagnostics []string
 }
 
 type Results struct {
 	ExpectedTests int
-	TotalTests int
-	PassedTests int
-	FailedTests int
-	SkippedTests int
-	TodoTests int
-	TapVersion int
-	Tests []Test
-	Lines []string
-	Explanation []string
+	TotalTests    int
+	PassedTests   int
+	FailedTests   int
+	SkippedTests  int
+	TodoTests     int
+	TapVersion    int
+	Tests         []Test
+	Lines         []string
+	Explanation   []string
 }
 
 const (
@@ -36,8 +36,8 @@ const (
 	STORE_YAML
 )
 
-func (r* Results) String() string {
-	var result string = ""
+func (r *Results) String() string {
+	var result = ""
 	if r.IsPassing() {
 		result += " Overall result: PASS\n"
 	} else {
@@ -50,7 +50,7 @@ func (r* Results) String() string {
 		result += fmt.Sprintf(" Expected tests: %d\n", r.ExpectedTests)
 	}
 	if r.ExpectedTests > 0 && r.TotalTests < r.ExpectedTests {
-		result += fmt.Sprintf("  Missing tests: %d\n", r.ExpectedTests - r.TotalTests)
+		result += fmt.Sprintf("  Missing tests: %d\n", r.ExpectedTests-r.TotalTests)
 	}
 	if r.PassedTests > 0 {
 		result += fmt.Sprintf("   Passed tests: %d\n", r.PassedTests)
@@ -79,7 +79,7 @@ func (r *Results) IsPassing() bool {
 		// assume that the total number of tests is equal to the number of tests that were found.
 		testCount = r.TotalTests
 	}
-	return r.TodoTests + r.SkippedTests + r.PassedTests == testCount
+	return r.TodoTests+r.SkippedTests+r.PassedTests == testCount
 }
 
 var versionLine = regexp.MustCompile(`^TAP version (\d+)`)
@@ -194,4 +194,3 @@ func Parse(lines []string) *Results {
 	}
 	return results
 }
-
