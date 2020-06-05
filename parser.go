@@ -68,8 +68,12 @@ func (r *Results) String() string {
 }
 
 func (r *Results) IsPassing() bool {
+	if r.TapVersion < 0 {
+		// We didn't find a TAP header, so we can't really call this a success.
+		return false
+	}
 	var testCount int
-	if r.ExpectedTests > 0 {
+	if r.ExpectedTests >= 0 {
 		// For a planned run, we must ensure that the number of passing tests is equal to the
 		// number of tests in the plan. Otherwise, at least one test was missing, and the run
 		// should be considered a failure.
@@ -95,7 +99,9 @@ func Parse(lines []string) *Results {
 	foundTestPlan := false
 	foundAllTests := false
 	results := &Results{
-		Lines: lines,
+		ExpectedTests: -1,
+		TapVersion:    -1,
+		Lines:         lines,
 	}
 	for _, line := range lines {
 		switch state {
