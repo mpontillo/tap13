@@ -16,7 +16,7 @@ func BenchmarkParsingSpeed(b *testing.B) {
 
 func TestParseResults(t *testing.T) {
 	t.Run("NoInputFails", func(t *testing.T) {
-		input := []string{}
+		var input []string
 		result := Parse(input)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, ` Overall result: FAIL
@@ -202,23 +202,6 @@ ok`,
    Passed tests: 4
 `, result.String())
 		assert.Equal(t, 12, result.TapVersion)
-	})
-	t.Run("ExtraTestsShouldBeIgnored", func(t *testing.T) {
-		input := strings.Split(`TAP version 13
-1..4
-ok
-ok
-ok
-ok
-ok`,
-			"\n")
-		result := Parse(input)
-		assert.True(t, result.IsPassing())
-		assert.Equal(t, 4, result.TotalTests)
-		assert.Equal(t, 4, result.ExpectedTests)
-		assert.Equal(t, ` Overall result: PASS
-   Passed tests: 4
-`, result.String())
 	})
 	t.Run("DoesNotParseTestLinesWithinYamlBlocks", func(t *testing.T) {
 		input := strings.Split(`TAP version 13
