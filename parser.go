@@ -1,3 +1,11 @@
+/*
+Package tap13 implements a parser for the Test Anything Protocol (TAP) version 13 specification.
+
+The full protocol specification can be found at the following URL:
+
+https://testanything.org/tap-version-13-specification.html
+
+*/
 package tap13
 
 import (
@@ -7,6 +15,9 @@ import (
 	"strings"
 )
 
+// Test encapsulates the result of a specific test, including a description and diagnostics (if
+// supplied). The TestNumber field is undefined if the TAP output does not include test numbers.
+// Diagnostics are supplied with trimmed whitespace, and blank lines removed.
 type Test struct {
 	TestNumber  int
 	Passed      bool
@@ -17,6 +28,11 @@ type Test struct {
 	Diagnostics []string
 }
 
+// Results encapsulates the result of the entire test run. If a plan was given in the input TAP, the
+// ExpectedTests will be greater than or equal to zero. The input lines are preserved in the Lines
+// field. Any diagnostics given before the output of a test run is preserved in the Explanation.
+// The Tests field contains a Test struct for each test that was run, in the order that it appeared
+// in the TAP output.
 type Results struct {
 	ExpectedTests int
 	TotalTests    int
@@ -67,6 +83,7 @@ func (r *Results) String() string {
 	return result
 }
 
+// IsPassing checks if the test results should be considered passing (true) or failing (false).
 func (r *Results) IsPassing() bool {
 	if r.TapVersion < 0 {
 		// We didn't find a TAP header, so we can't really call this a success.
@@ -92,6 +109,9 @@ var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*(\w*)\s*.*)?`
 var testPlanDeclaration = regexp.MustCompile(`^\d+\.\.(\d+)$`)
 var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
 
+// Parse interprets the specified lines as output lines from a program that generate TAP output,
+// and returns a corresponding Results structure containing the test results based on its
+// interpretation.
 func Parse(lines []string) *Results {
 	var err error
 	var currentTest *Test
