@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	util "github.com/mpontillo/tap13/internal"
 )
 
 func BenchmarkParsingSpeed(b *testing.B) {
-	lines := ReadFile("testdata/edge_cases.tap13")
+	lines := util.ReadFile("testdata/edge_cases.tap13")
 	for i := 0; i < b.N; i++ {
 		Parse(lines)
 	}
