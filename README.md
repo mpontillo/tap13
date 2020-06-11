@@ -24,12 +24,10 @@ A `tap13` command-line tool is provided. It will read the contents of
 each file (assumed to contain TAP version 13 results) specified as an
 argument, and output a summary of the test results.
 
-This tool is primarily intended for testing the library itself.
+This tool is primarily intended for testing the library itself; users of
+this library should consume the `Results` and `Test` structs.
 
 # Bugs
-
-The parser does not currently interpret or store YAML output, or comments
-specified as directives on the same line as a test run.
 
 Bugs are [tracked on the GitHub issues page](https://github.com/mpontillo/tap13/issues).
 
