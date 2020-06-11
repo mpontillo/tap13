@@ -27,6 +27,7 @@ type Test struct {
 	Description   string
 	DirectiveText string
 	Diagnostics   []string
+	YamlBytes     []byte
 }
 
 // Results encapsulates the result of the entire test run. If a plan was given in the input TAP, the
@@ -124,6 +125,7 @@ var testLine = regexp.MustCompile(`^(not )?ok\b(.*)`)
 var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*((\w*)\s*.*)\s*)?`)
 var testPlanDeclaration = regexp.MustCompile(`^\d+\.\.(\d+)$`)
 var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
+var yamlStart = regexp.MustCompile(`^ *---$`)
 
 // Parse interprets the specified lines as output lines from a program that generate TAP output,
 // and returns a corresponding Results structure containing the test results based on its
@@ -131,6 +133,9 @@ var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
 func Parse(lines []string) *Results {
 	var err error
 	var currentTest *Test
+	var yamlStop = regexp.MustCompile(`^  \.\.\.$`)
+	var yamlPrefix = "  "
+	yamlIndentLevel := 0
 	state := findVersionString
 	foundTestPlan := false
 	foundAllTests := false
@@ -215,7 +220,13 @@ func Parse(lines []string) *Results {
 				if results.TotalTests == results.ExpectedTests {
 					foundAllTests = true
 				}
-			} else if strings.TrimSpace(line) == "---" {
+			} else if yamlStart.MatchString(line) {
+				yamlIndentLevel = strings.Index(line, "---")
+				// Build a regular expression to match the end of the YAML block based on the
+				// amount of indentation in the beginning block.
+				yamlPrefix = strings.Repeat(" ", yamlIndentLevel)
+				yamlStop = regexp.MustCompile(
+					`^` + yamlPrefix + `\.\.\.$`)
 				state = storeYaml
 				continue
 			} else {
@@ -233,9 +244,17 @@ func Parse(lines []string) *Results {
 				}
 			}
 		case storeYaml:
-			if strings.TrimSpace(line) == "..." {
+			if yamlStop.MatchString(line) {
 				state = storeTestMetadata
 				continue
+			} else {
+				// YAML that appears before a test definition is undefined behavior.
+				if currentTest != nil {
+					// The Go YAML library expects a []byte, so store it that way for later usage.
+					line = strings.TrimPrefix(line, yamlPrefix)
+					currentTest.YamlBytes = append(currentTest.YamlBytes, line...)
+					currentTest.YamlBytes = append(currentTest.YamlBytes, "\n"...)
+				}
 			}
 		}
 	}
