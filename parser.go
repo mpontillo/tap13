@@ -19,13 +19,14 @@ import (
 // supplied). The TestNumber field is undefined if the TAP output does not include test numbers.
 // Diagnostics are supplied with trimmed whitespace, and blank lines removed.
 type Test struct {
-	TestNumber  int
-	Passed      bool
-	Failed      bool
-	Skipped     bool
-	Todo        bool
-	Description string
-	Diagnostics []string
+	TestNumber    int
+	Passed        bool
+	Failed        bool
+	Skipped       bool
+	Todo          bool
+	Description   string
+	DirectiveText string
+	Diagnostics   []string
 }
 
 // Results encapsulates the result of the entire test run. If a plan was given in the input TAP, the
@@ -120,7 +121,7 @@ func (r *Results) IsPassing() bool {
 var versionLine = regexp.MustCompile(`^TAP version (\d+)`)
 var bailOutLine = regexp.MustCompile(`^Bail out!\s*(\S.*)?$`)
 var testLine = regexp.MustCompile(`^(not )?ok\b(.*)`)
-var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*(\w*)\s*.*)?`)
+var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*((\w*)\s*.*)\s*)?`)
 var testPlanDeclaration = regexp.MustCompile(`^\d+\.\.(\d+)$`)
 var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
 
@@ -181,7 +182,8 @@ func Parse(lines []string) *Results {
 					continue
 				}
 				optionalContentMatch := optionalTestLine.FindStringSubmatch(testLineMatch[2])
-				directive := optionalContentMatch[4]
+				directive := optionalContentMatch[5]
+				directiveText := optionalContentMatch[4]
 				testNumString := optionalContentMatch[1]
 				if testNumString != "" {
 					currentTest.TestNumber, err = strconv.Atoi(testNumString)
@@ -194,6 +196,9 @@ func Parse(lines []string) *Results {
 				isFailed := testLineMatch[1] == "not "
 				// Process special cases first; they should not count toward the pass/fail count.
 				results.TotalTests++
+				if directive != "" {
+					currentTest.DirectiveText = directiveText
+				}
 				if strings.EqualFold(directive, "skip") {
 					results.SkippedTests++
 					currentTest.Skipped = true

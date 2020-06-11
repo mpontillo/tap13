@@ -90,7 +90,7 @@ ok`,
    Passed tests: 4
 `, result.String())
 	})
-	t.Run("SkipAndTodoTestsShouldBeIgnoredButCounted", func(t *testing.T) {
+	t.Run("SkipAndTodoTestsShouldBeIgnoredButCountedAndDirectivesSaved", func(t *testing.T) {
 		input := strings.Split(`TAP version 13
 1..5
 ok
@@ -103,6 +103,13 @@ ok # TODO working on this one`,
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 5, result.TotalTests)
 		assert.Equal(t, 5, result.ExpectedTests)
+		assert.Equal(t, "", result.Tests[0].DirectiveText)
+		assert.Equal(t,
+			"skip because we feel like skipping",
+			result.Tests[1].DirectiveText)
+		assert.Equal(t,
+			"TODO working on this one",
+			result.Tests[4].DirectiveText)
 		assert.Equal(t, ` Overall result: PASS
 Total tests run: 5
    Passed tests: 1
