@@ -17,11 +17,11 @@ manual-test: build
 
 .PHONY: unit-test
 unit-test: build
-	go test -v ./...
+	go test -cover -v ./...
 
 .PHONY: performance-test
 performance-test:
-	go test -v -bench=. ./...
+	go test -cover -v -bench=. ./...
 
 # Note: The unit-test target is a subset of the performance-test target.
 .PHONY: test
