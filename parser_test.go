@@ -249,4 +249,44 @@ ok`,
 		assert.Equal(
 			t, "!! Warning: uncertain improbability.", result.Tests[2].Diagnostics[0])
 	})
+	t.Run("BailOutImmediately", func(t *testing.T) {
+		input := strings.Split(`TAP version 13
+Bail out!`,
+			"\n")
+		result := Parse(input)
+		assert.False(t, result.IsPassing())
+		assert.Equal(t, 0, result.TotalTests)
+	})
+	t.Run("BailOutWithWhitespaceAfterSomeTests", func(t *testing.T) {
+		input := strings.Split(`TAP version 13
+ok
+ok
+ok
+Bail out! `,
+			"\n")
+		result := Parse(input)
+		assert.False(t, result.IsPassing())
+		assert.Equal(t, 3, result.TotalTests)
+		assert.Equal(t, "", result.BailOutReason)
+		assert.Equal(t, ` Overall result: FAIL
+   Passed tests: 3
+     Bailed out: (no reason given)
+`, result.String())
+	})
+	t.Run("BailOutWithReasonAfterSomeTests", func(t *testing.T) {
+		input := strings.Split(`TAP version 13
+ok
+ok
+ok
+Bail out! Towel not found.`,
+			"\n")
+		result := Parse(input)
+		assert.False(t, result.IsPassing())
+		assert.Equal(t, 3, result.TotalTests)
+		assert.Equal(t, "Towel not found.", result.BailOutReason)
+		assert.Equal(t, ` Overall result: FAIL
+   Passed tests: 3
+     Bailed out: Towel not found.
+`, result.String())
+	})
 }

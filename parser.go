@@ -41,6 +41,8 @@ type Results struct {
 	SkippedTests  int
 	TodoTests     int
 	TapVersion    int
+	BailOut       bool
+	BailOutReason string
 	Tests         []Test
 	Lines         []string
 	Explanation   []string
@@ -80,6 +82,15 @@ func (r *Results) String() string {
 	if r.TodoTests > 0 {
 		result += fmt.Sprintf("     TODO tests: %d\n", r.TodoTests)
 	}
+	if r.BailOut {
+		var reason string
+		if r.BailOutReason != "" {
+			reason = r.BailOutReason
+		} else {
+			reason = "(no reason given)"
+		}
+		result += fmt.Sprintf("     Bailed out: %s\n", reason)
+	}
 	return result
 }
 
@@ -87,6 +98,9 @@ func (r *Results) String() string {
 func (r *Results) IsPassing() bool {
 	if r.TapVersion < 0 {
 		// We didn't find a TAP header, so we can't really call this a success.
+		return false
+	}
+	if r.BailOut {
 		return false
 	}
 	var testCount int
@@ -104,6 +118,7 @@ func (r *Results) IsPassing() bool {
 }
 
 var versionLine = regexp.MustCompile(`^TAP version (\d+)`)
+var bailOutLine = regexp.MustCompile(`^Bail out!\s*(\S.*)?$`)
 var testLine = regexp.MustCompile(`^(not )?ok\b(.*)`)
 var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*(\w*)\s*.*)?`)
 var testPlanDeclaration = regexp.MustCompile(`^\d+\.\.(\d+)$`)
@@ -136,6 +151,12 @@ func Parse(lines []string) *Results {
 				state = storeTestMetadata
 			}
 		case storeTestMetadata:
+			bailOutMatch := bailOutLine.FindStringSubmatch(line)
+			if bailOutMatch != nil {
+				results.BailOut = true
+				results.BailOutReason = bailOutMatch[1]
+				break
+			}
 			if !foundTestPlan {
 				testPlan := testPlanDeclaration.FindStringSubmatch(line)
 				if testPlan != nil {
