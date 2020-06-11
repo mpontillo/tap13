@@ -312,17 +312,17 @@ ok`,
 		assert.Equal(t, ` Overall result: PASS
    Passed tests: 2
 `, result.String())
-		assert.Equal(t, []byte("yaml:\n  foo: 1\n  bar: 2\n"), result.Tests[0].YamlBytes)
+		assert.Equal(t, []byte("  yaml:\n    foo: 1\n    bar: 2\n"), result.Tests[0].YamlBytes)
 	})
 	t.Run("StoresWeirdlyIndentedYamlBytes", func(t *testing.T) {
 		input := strings.Split(`TAP version 13
 ok
-     ---
+---
      yaml:
        foo: 1
 
        bar: 2
-     ...
+        ...
 ok`,
 			"\n")
 		result := Parse(input)
@@ -331,6 +331,7 @@ ok`,
 		assert.Equal(t, ` Overall result: PASS
    Passed tests: 2
 `, result.String())
-		assert.Equal(t, []byte("yaml:\n  foo: 1\n\n  bar: 2\n"), result.Tests[0].YamlBytes)
+		assert.Equal(t, []byte("     yaml:\n       foo: 1\n\n       bar: 2\n"),
+			result.Tests[0].YamlBytes)
 	})
 }

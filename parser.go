@@ -125,7 +125,7 @@ var testLine = regexp.MustCompile(`^(not )?ok\b(.*)`)
 var optionalTestLine = regexp.MustCompile(`\s*(\d*)?\s*([^#]*)(#\s*((\w*)\s*.*)\s*)?`)
 var testPlanDeclaration = regexp.MustCompile(`^\d+\.\.(\d+)$`)
 var diagnostic = regexp.MustCompile(`\s*#(.*)$`)
-var yamlStart = regexp.MustCompile(`^ *---$`)
+var yamlStart = regexp.MustCompile(`^\s*---$`)
 
 // Parse interprets the specified lines as output lines from a program that generate TAP output,
 // and returns a corresponding Results structure containing the test results based on its
@@ -133,9 +133,7 @@ var yamlStart = regexp.MustCompile(`^ *---$`)
 func Parse(lines []string) *Results {
 	var err error
 	var currentTest *Test
-	var yamlStop = regexp.MustCompile(`^  \.\.\.$`)
-	var yamlPrefix = "  "
-	yamlIndentLevel := 0
+	var yamlStop = regexp.MustCompile(`^\s*\.\.\.$`)
 	state := findVersionString
 	foundTestPlan := false
 	foundAllTests := false
@@ -221,12 +219,6 @@ func Parse(lines []string) *Results {
 					foundAllTests = true
 				}
 			} else if yamlStart.MatchString(line) {
-				yamlIndentLevel = strings.Index(line, "---")
-				// Build a regular expression to match the end of the YAML block based on the
-				// amount of indentation in the beginning block.
-				yamlPrefix = strings.Repeat(" ", yamlIndentLevel)
-				yamlStop = regexp.MustCompile(
-					`^` + yamlPrefix + `\.\.\.$`)
 				state = storeYaml
 				continue
 			} else {
@@ -251,7 +243,6 @@ func Parse(lines []string) *Results {
 				// YAML that appears before a test definition is undefined behavior.
 				if currentTest != nil {
 					// The Go YAML library expects a []byte, so store it that way for later usage.
-					line = strings.TrimPrefix(line, yamlPrefix)
 					currentTest.YamlBytes = append(currentTest.YamlBytes, line...)
 					currentTest.YamlBytes = append(currentTest.YamlBytes, "\n"...)
 				}
