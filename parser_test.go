@@ -30,6 +30,7 @@ Total tests run: 0
 not ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, ` Overall result: FAIL
 Total tests run: 1
@@ -41,6 +42,7 @@ Total tests run: 1
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, ` Overall result: PASS
    Passed tests: 1
@@ -53,6 +55,7 @@ not ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, 3, result.TotalTests)
 	})
@@ -64,6 +67,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, 3, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -83,6 +87,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -100,6 +105,7 @@ not ok # todo
 ok # TODO working on this one`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 5, result.TotalTests)
 		assert.Equal(t, 5, result.ExpectedTests)
@@ -130,6 +136,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -146,6 +153,7 @@ ok 1
 ok 3`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -166,6 +174,7 @@ ok 1
 ok 3`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -187,6 +196,7 @@ not ok baz # skip
 ok foo bar # squirrel!`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, "foo", result.Tests[0].Description)
 		assert.Equal(t, "bar", result.Tests[1].Description)
@@ -204,6 +214,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -225,6 +236,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, ` Overall result: PASS
@@ -246,6 +258,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 4, result.TotalTests)
 		assert.Equal(t, 4, result.ExpectedTests)
@@ -261,6 +274,7 @@ ok`,
 Bail out!`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, 0, result.TotalTests)
 	})
@@ -272,6 +286,7 @@ ok
 Bail out! `,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, 3, result.TotalTests)
 		assert.Equal(t, "", result.BailOutReason)
@@ -288,6 +303,7 @@ ok
 Bail out! Towel not found.`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.False(t, result.IsPassing())
 		assert.Equal(t, 3, result.TotalTests)
 		assert.Equal(t, "Towel not found.", result.BailOutReason)
@@ -307,6 +323,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 2, result.TotalTests)
 		assert.Equal(t, ` Overall result: PASS
@@ -326,6 +343,7 @@ ok
 ok`,
 			"\n")
 		result := Parse(input)
+		assert.True(t, result.FoundTapData)
 		assert.True(t, result.IsPassing())
 		assert.Equal(t, 2, result.TotalTests)
 		assert.Equal(t, ` Overall result: PASS
@@ -334,4 +352,13 @@ ok`,
 		assert.Equal(t, []byte("     yaml:\n       foo: 1\n\n       bar: 2\n"),
 			result.Tests[0].YamlBytes)
 	})
+	t.Run("InvalidInputFile", func(t *testing.T) {
+		input := strings.Split(`Not a TAP version 13 file!
+No TAP here.
+What were you expecting? An error?`,
+			"\n")
+		result := Parse(input)
+		assert.False(t, result.FoundTapData)
+	})
+
 }
