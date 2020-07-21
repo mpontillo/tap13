@@ -45,6 +45,7 @@ type Results struct {
 	TapVersion    int
 	BailOut       bool
 	BailOutReason string
+	FoundTapData  bool
 	Tests         []Test
 	Lines         []string
 	Explanation   []string
@@ -152,6 +153,7 @@ func Parse(lines []string) *Results {
 					// malformed test version line; keep looking
 					continue
 				}
+				results.FoundTapData = true
 				state = storeTestMetadata
 			}
 		case storeTestMetadata:
